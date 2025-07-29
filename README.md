@@ -1,19 +1,19 @@
 # Lightweight-Charts for Freqtrade Guide
 
-[Freqtrade](https://github.com/freqtrade/freqtrade) is an open-source cryptocurrency bot managment system, complete with capabilities for backtesting and deployment. 
+&nbsp;&nbsp;&nbsp;[Freqtrade](https://github.com/freqtrade/freqtrade) is an open-source cryptocurrency bot managment system, complete with capabilities for backtesting and deployment. 
 
-[TradingView](https://www.tradingview.com/pricing/?share_your_love=talker91) is a powerful commercial charting platform that is widely used in the trading community. They provide [Lightweight-Charts](https://www.tradingview.com/lightweight-charts/), an open-source Javascript based library based on for creating financial charts in web applications.
+&nbsp;&nbsp;&nbsp;[TradingView](https://www.tradingview.com/pricing/?share_your_love=talker91) is a powerful commercial charting platform that is widely used in the trading community. They provide [Lightweight-Charts](https://www.tradingview.com/lightweight-charts/), an open-source Javascript based library based on for creating financial charts in web applications.
 
-Compared to TradingView/Lightweight-Charts, Freqtrade's built-in plotting capabilities are limited. These [Plotly](https://plotly.com/) based charts do not providethe same level of interactivity or visual appeal.
+&nbsp;&nbsp;&nbsp;Compared to TradingView/Lightweight-Charts, Freqtrade's built-in plotting capabilities are limited. These [Plotly](https://plotly.com/) based charts do not providethe same level of interactivity or visual appeal.
 
-I was inspired by the [Lightweight-Charts-Python](https://github.com/louisnw01/lightweight-charts-python) library to create a solution that allows Freqtrade users to visualize their trading strategies using Lightweight-Charts. This requires a Javascript script to be run inside of the Freqtrade Docker container. 
+&nbsp;&nbsp;&nbsp;I was inspired by the [Lightweight-Charts-Python](https://github.com/louisnw01/lightweight-charts-python) library and [this PartTimeLarry video](https://www.youtube.com/watch?v=TlhDI3PforA) to create a solution that allows Freqtrade users to visualize their trading strategies using Lightweight-Charts. This requires a Javascript script to be run inside of the Freqtrade Docker container. 
 
 The result is an interactive chart that look like this:![RSI example plot](images/RSI_example.png)
 
 
-If this is your first time setting up Freqtrade, see the [Initialization section](#initialization) below and refer to the [Freqtrade Quickstart Guide](https://www.freqtrade.io/en/latest/quickstart/).
+&nbsp;&nbsp;&nbsp;If this is your first time setting up Freqtrade, see the [Initialization section](#initialization) below and refer to the [Freqtrade Quickstart Guide](https://www.freqtrade.io/en/latest/quickstart/).
 
-If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting section](#lightweight-charts-plotting) section.
+&nbsp;&nbsp;&nbsp;If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting section](#lightweight-charts-plotting) section.
 
 
 
