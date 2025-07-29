@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OHLCV + Indicator + Freqtrade Markers (Unified Pane, Synced)</title>
+  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #f4f4f4; }
+    #controls { margin: 1rem 0; text-align: center; }
+    #panes { width: 800px; margin: auto; }
+    .pane { background: #181818; border-radius: 5px; margin-bottom: 8px; }
+    #indicatorCol { margin-left: 1rem; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>OHLCV CSV: <input type="file" id="ohlcvFile" accept=".csv"></label>
+    <label>Indicator CSV: <input type="file" id="indicatorFile" accept=".csv"></label>
+    <label>Trades JSON: <input type="file" id="tradesFile" accept=".json"></label>
+    <select id="indicatorCol" style="display:none;"></select>
+    <button id="plotBtn">Plot</button>
+  </div>
+  <div id="panes">
+    <div id="price" class="pane" style="width:800px;height:300px"></div>
+    <div id="indicator" class="pane" style="width:800px;height:150px"></div>
+  </div>
+  <script>
+    // CSV parse util (comma splitting only, not robust for quoted commas)
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split('\n').filter(l => l.trim().length);
+      const header = lines[0].split(',');
+      return {
+        columns: header,
+        rows: lines.slice(1).map(line => {
+          const values = line.split(',');
+          const obj = {};
+          header.forEach((h, i) => obj[h] = values[i]);
+          return obj;
+        })
+      };
+    }
+
+    // Globals for indicator column logic
+    let indicatorColumns = [], indicatorRows = [];
+
+    document.getElementById('indicatorFile').onchange = async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const csvText = await file.text();
+      const { columns, rows } = parseCSV(csvText);
+
+      // Populate column dropdown
+      const select = document.getElementById('indicatorCol');
+      select.innerHTML = '';
+      columns.forEach(col => {
+        const opt = document.createElement('option');
+        opt.value = col;
+        opt.text = col;
+        select.appendChild(opt);
+      });
+      select.style.display = '';
+      indicatorColumns = columns;
+      indicatorRows = rows;
+    };
+
+    document.getElementById('plotBtn').onclick = async function() {
+      // --- Parse OHLCV ---
+      const ohlcvInput = document.getElementById('ohlcvFile').files[0];
+      if (!ohlcvInput) return alert("Select OHLCV CSV!");
+      const ohlcvText = await ohlcvInput.text();
+      const { columns: ohlcvCols, rows: ohlcvRows } = parseCSV(ohlcvText);
+      let timeCol = ohlcvCols.includes('time') ? 'time' : ohlcvCols[0];
+      let candles = ohlcvRows.map(row => ({
+        time: Number(row[timeCol]),
+        open: Number(row.open),
+        high: Number(row.high),
+        low: Number(row.low),
+        close: Number(row.close)
+      }));
+
+      // --- Parse Indicator CSV (optional) ---
+      const indicatorInput = document.getElementById('indicatorFile').files[0];
+      let indicatorData = [];
+      if (indicatorInput) {
+        const indColSelect = document.getElementById('indicatorCol');
+        const pickedCol = indColSelect.value;
+        if (!pickedCol) return alert("Choose which column to plot as indicator!");
+        const indTimeCol = indicatorColumns.includes('time') ? 'time' : indicatorColumns[0];
+        indicatorData = indicatorRows
+          .filter(row => row[pickedCol] !== "" && !isNaN(Number(row[pickedCol])))
+          .map(row => ({
+            time: Number(row[indTimeCol]),
+            value: Number(row[pickedCol])
+          }));
+      }
+
+      // --- Parse Trades JSON (optional) ---
+      let markers = [];
+      const tradesInput = document.getElementById('tradesFile').files[0];
+      if (tradesInput) {
+        const jsonText = await tradesInput.text();
+        let tradesObj = {};
+        try { tradesObj = JSON.parse(jsonText); } catch { alert('Invalid Trades JSON'); }
+        let trades = [];
+        if (tradesObj.strategy) {
+          const stratKeys = Object.keys(tradesObj.strategy);
+          if (stratKeys.length > 0) trades = tradesObj.strategy[stratKeys[0]].trades || [];
+        }
+        trades.forEach(trade => {
+          // BUY marker
+          markers.push({
+            time: Math.floor(trade.open_timestamp / 1000),
+            position: 'belowBar',
+            color: '#2196F3',
+            shape: 'arrowUp',
+            text: 'Buy\n' + Number(trade.open_rate).toFixed(2)
+          });
+          // SELL marker
+          if (trade.close_timestamp && trade.close_rate) {
+            markers.push({
+              time: Math.floor(trade.close_timestamp / 1000),
+              position: 'aboveBar',
+              color: '#e91e63',
+              shape: 'arrowDown',
+              text: 'Sell\n' + Number(trade.close_rate).toFixed(2)
+            });
+          }
+        });
+      }
+
+      // --- Remove Previous Charts ---
+      document.getElementById('price').innerHTML = '';
+      document.getElementById('indicator').innerHTML = '';
+
+      // --- Create Price Chart (Top Pane) ---
+      const priceChart = LightweightCharts.createChart(document.getElementById('price'), {
+        layout: { background: { color: "#181818" }, textColor: "#fff" },
+        timeScale: { timeVisible: true, secondsVisible: true }
+      });
+      const candleSeries = priceChart.addCandlestickSeries();
+      candleSeries.setData(candles);
+      if (markers.length) candleSeries.setMarkers(markers);
+
+      // --- Create Indicator Chart (Bottom Pane) ---
+      const indicatorChart = LightweightCharts.createChart(document.getElementById('indicator'), {
+        layout: { background: { color: "#181818" }, textColor: "#fff" },
+        timeScale: { timeVisible: true, secondsVisible: true }
+      });
+      if (indicatorData.length) {
+        const indicatorSeries = indicatorChart.addLineSeries({ color: '#ffeb3b', lineWidth: 2 });
+        indicatorSeries.setData(indicatorData);
+      }
+
+      // --- SYNC PANE LOGIC (EXACT) ---
+      priceChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        if (range) indicatorChart.timeScale().setVisibleLogicalRange(range);
+      });
+      indicatorChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        if (range) priceChart.timeScale().setVisibleLogicalRange(range);
+      });
+
+      priceChart.subscribeCrosshairMove(param => {
+        if (param.time) indicatorChart.setCrosshairPosition({ time: param.time, point: param.point });
+        else indicatorChart.clearCrosshairPosition();
+      });
+      indicatorChart.subscribeCrosshairMove(param => {
+        if (param.time) priceChart.setCrosshairPosition({ time: param.time, point: param.point });
+        else priceChart.clearCrosshairPosition();
+      });
+    };
+  </script>
+</body>
+</html>
