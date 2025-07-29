@@ -6,10 +6,10 @@ import glob
 import re
 import pandas as pd
 import importlib.util
-import inspect  # <-- needed for dynamic __init__ check
+import inspect 
 
 def find_user_data_dir():
-    """Walk up parent dirs until config.json is found."""
+    """Walk up parent folder structuure until we can find config.json"""
     here = os.path.abspath(os.path.dirname(__file__))
     last = None
     while here != last:
@@ -63,7 +63,7 @@ def main():
     parser.add_argument('--strategy-path', help='Custom strategies path')
     args = parser.parse_args()
 
-    # Find freqtrade user_data root dir by looking for config.json
+    # Find freqtrade user_data root directory
     user_data_dir = find_user_data_dir()
     print(f"[DEBUG] Detected freqtrade user_data root: {user_data_dir}")
 
@@ -76,12 +76,11 @@ def main():
     print(f"[DEBUG] data_dir: {data_dir}")
     print(f"[DEBUG] config: {config_path}")
 
-    # Load config.json
     config = load_config(config_path) if os.path.exists(config_path) else {}
 
-    # CLI > config > fallback
+    # Note: CLI > config > fallback
     timeframe = args.timeframe or config.get('timeframe', '5m')
-    # Pair fallback: if not provided, use first in whitelist if present, else error
+    # Pair fallback: if not provided, use first in whitelist if present. If not, give error
     if args.pair:
         pair = args.pair
     else:
@@ -92,13 +91,12 @@ def main():
             print("[ERROR] No pair provided and no pair_whitelist in config. Use --pair or add pair_whitelist.")
             sys.exit(1)
     timerange = args.timerange or config.get('timerange', None)
-    # output = args.output  # <-- not used anymore!
 
     print(f"[DEBUG] timeframe: {timeframe}")
     print(f"[DEBUG] pair: {pair}")
     print(f"[DEBUG] timerange: {timerange}")
 
-    # Strategy discovery (Freqtrade-style)
+
     strat_file = find_strategy_file(args.strategy, strat_dir, recursive=True)
     if not strat_file:
         print(f"Strategy {args.strategy} not found in {strat_dir}")
@@ -111,14 +109,14 @@ def main():
         print(f"Could not import {args.strategy} from {strat_file}")
         sys.exit(1)
 
-    # Get exchange name from config (required)
+    # Get exchange name from config
     exchange_name = config.get('exchange', {}).get('name', None)
     if not exchange_name:
         print('[ERROR] Exchange name not found in config.json.')
         sys.exit(1)
     print(f"[DEBUG] exchange_name: {exchange_name}")
 
-    # --- [Robust OHLCV file location logic] ---
+    # Preventing any OHLCV errors
     pair_base = pair.replace('/', '').replace('_', '')      # BTC/USDT -> BTCUSDT
     pair_uscore = pair.replace('/', '_')                    # BTC/USDT -> BTC_USDT
 
@@ -150,9 +148,9 @@ def main():
     else:
         print(f"[ERROR] OHLCV file not found in any of these locations.")
         sys.exit(1)
-    # --- end robust OHLCV block ---
+    
 
-    # Standardize columns
+    # Standardize
     df.columns = [c.lower() for c in df.columns]
     if 'time' not in df.columns:
         if 'date' in df.columns:
@@ -160,14 +158,15 @@ def main():
         else:
             print('Missing time or date column.')
             sys.exit(1)
-    # Timerange
+
+    # Timerange stuff
     if timerange:
         tmin, tmax = timerange.split('-')
         tmin = int(pd.Timestamp(tmin, tz='UTC').timestamp())
         tmax = int(pd.Timestamp(tmax, tz='UTC').timestamp())
         df = df[(df['time'] >= tmin) & (df['time'] <= tmax)]
 
-    # ---- This is the NEW block (instantiate with config if possible) ----
+
     strat = None
     try:
         sig = inspect.signature(strat_cls)
@@ -195,7 +194,7 @@ def main():
     indicator_cols = [c for c in df_out.columns if c not in base_cols]
     print(f"[DEBUG] Indicator columns: {indicator_cols}")
 
-    # --- NEW OUTPUT LOGIC: Save always to data/indicator_data/indicator_data_<StrategyName>.csv ---
+    # Output
     indicator_dir = os.path.join(data_dir, 'indicator_data')
     os.makedirs(indicator_dir, exist_ok=True)
     output = os.path.join(indicator_dir, f"indicator_data_{args.strategy}.csv")

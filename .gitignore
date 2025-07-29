@@ -282,11 +282,3 @@ target/
 !config_examples/config_freqai.example.json
 
 docker-compose-*.yml
-
-# Backtesting 
-/data/backtest_raw
-
-/code/pdfs
-/bots/ft_userdata/user_data/data
-/bots/ft_userdata/user_data/backtest_results
-/bots/ft_userdata/user_data/plot

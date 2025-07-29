@@ -2,11 +2,11 @@ import zipfile
 import os
 
 def find_root_dir():
-    """Go up from <root>/code/ to <root>."""
+    """Go to root"""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 def all_backtest_dirs(root_dir):
-    """Yield all <root>/bots/<bot>/user_data/backtest_results directories."""
+    """Find all backtest_results folders inside of all bots"""
     bots_dir = os.path.join(root_dir, 'bots')
     if not os.path.isdir(bots_dir):
         print(f"[ERROR] No 'bots' folder found at: {bots_dir}")
@@ -17,7 +17,7 @@ def all_backtest_dirs(root_dir):
             yield bt_dir
 
 def unzip_all_in_folder(folder_path):
-    """Unzips all .zip files in a single folder (no recursion)."""
+    """Unzips all .zip files"""
     for item in os.listdir(folder_path):
         item_path = os.path.join(folder_path, item)
         if zipfile.is_zipfile(item_path):

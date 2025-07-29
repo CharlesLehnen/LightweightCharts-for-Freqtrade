@@ -2,11 +2,11 @@ import os
 import pandas as pd
 
 def find_root_dir():
-    """Go up from <root>/code/ to <root>."""
+    """Go up to root"""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 def all_data_dirs(root_dir):
-    """Yield all <root>/bots/<bot>/user_data/data directories."""
+    """Lookup all data folders inside of different bots"""
     bots_dir = os.path.join(root_dir, 'bots')
     if not os.path.isdir(bots_dir):
         print(f"[ERROR] No 'bots' folder found at: {bots_dir}")

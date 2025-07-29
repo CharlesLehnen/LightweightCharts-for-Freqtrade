@@ -8,6 +8,9 @@ Compared to TradingView/Lightweight-Charts, Freqtrade's built-in plotting capabi
 
 I was inspired by the [Lightweight-Charts-Python](https://github.com/louisnw01/lightweight-charts-python) library to create a solution that allows Freqtrade users to visualize their trading strategies using Lightweight-Charts. This requires a Javascript script to be run inside of the Freqtrade Docker container. 
 
+The result is an interactive chart that look like this:![RSI example plot](images/RSI_example.png)
+
+
 If this is your first time setting up Freqtrade, see the [Initialization section](#initialization) below and refer to the [Freqtrade Quickstart Guide](https://www.freqtrade.io/en/latest/quickstart/).
 
 If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting section](#lightweight-charts-plotting) section.
@@ -22,13 +25,19 @@ If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting
 3) Run [`code/unzip_backtest_results.py`](code/unzip_backtest_results.py) to unzip backtest results
 
 4) In terminal:
-    - `mkdir -p bots/<bot>/user_data/code`
-    - `cp code/extract_indicators.py bots/<bot>/user_data/code/`
-    - `cd bots/<bot>`
-    - `docker-compose up -d`
-    - `docker exec -it freqtrade bash`
-    - `cd user_data/`
-    - `python3 code/extract_indicators.py --strategy <DesiredStrategyName>`
+    - First time:
+        - `mkdir -p bots/<bot>/user_data/code`
+        - `cp code/extract_indicators.py bots/<bot>/user_data/code/`
+
+    - Each time:
+        - Start container:
+            - `cd bots/<bot>`
+            - `docker-compose up -d`
+            - `docker exec -it freqtrade bash`
+
+        - Extract indicators:
+            - `cd user_data/`
+            - `python3 code/extract_indicators.py --strategy <DesiredStrategyName>`
 
 5) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in:
     - `bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>`
@@ -64,13 +73,16 @@ If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting
 0) In `bots/<bot>/user_data/config.json`
 - Be sure set to `"method": "StaticPairList", ` and pairs selected in the `pairs_whitelist`. For example: "BTC/USDT"
 1) In terminal:
-    - `docker-compose up -d`
-    - `docker exec -it freqtrade bash`
-        - If this doesn't work, can double check name with `docker ps`
-    - `freqtrade download-data`
-        - To force refresh, may need to delete current files to overwrite them
-    - `freqtrade backtesting --export=trades --strategy <StrategyName> --timeframe <Xy> --timerange <YEARMoDa-YEARMoDa>`
-        - Note that timeframe and timerange are optional, both will revert to defaults
+    - First time:
+        - `docker-compose up -d`
+        - `docker exec -it freqtrade bash`
+            - If this doesn't work, can double check name with `docker ps`
+        - `freqtrade download-data`
+            - To force refresh, may need to delete current files to overwrite them
+    
+    - For each new strategy:
+        - `freqtrade backtesting --export=trades --strategy <StrategyName> --timeframe <Xy> --timerange <YEARMoDa-YEARMoDa>`
+            - Note that timeframe and timerange are optional, both will revert to defaults
 
 ---
 
