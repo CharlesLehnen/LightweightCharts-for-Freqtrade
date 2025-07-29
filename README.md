@@ -16,20 +16,24 @@ If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting
 
 ## Lightweight-Charts Plotting
 1) Generate a backtest (*see [Backtesting](#backtesting) section below*)
+
 2) Run [`code/feather_to_csv.py`(code/feather_to_csv.py) to convert the feather files Freqtrade generated to CSVs
-can I make this a link to a specific file?
 
 3) Run [`code/unzip_backtest_results.py`](code/unzip_backtest_results.py) to unzip backtest results
 
 4) In terminal:
+    - `mkdir -p bots/<bot>/user_data/code`
+    - `cp code/extract_indicators.py bots/<bot>/user_data/code/`
+    - `cd bots/<bot>`
     - `docker-compose up -d`
     - `docker exec -it freqtrade bash`
+    - `cd user_data/`
     - `python3 code/extract_indicators.py --strategy <DesiredStrategyName>`
 
 5) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in:
-    - bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>
-    - bots/<bot>/user_data/<exchange>/<Pair_Timeframe.csv>
-    - bots/<bot>/user_data/data/indicator_data
+    - `bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>`
+    - `bots/<bot>/user_data/<exchange>/<Pair_Timeframe.csv>`
+    - `bots/<bot>/user_data/data/indicator_data`
 
 ---
 
@@ -43,7 +47,7 @@ can I make this a link to a specific file?
     - cd to Git repo folder
     - `conda create -n <env name> python=3.10` 
     - `conda activate <env name>`
-    - `conda install pandas matplotlib numpy jupyter`
+    - `conda install pandas matplotlib numpy jupyter pyarrow`
     - `pip install freqtrade ccxt`
 
 3) [In terminal:](https://www.freqtrade.io/en/2020.11/docker_quickstart/)
@@ -57,7 +61,7 @@ can I make this a link to a specific file?
 
 
 ## Backteststing
-0) In bots/<bot>/user_data/config.json
+0) In `bots/<bot>/user_data/config.json`
 - Be sure set to `"method": "StaticPairList", ` and pairs selected in the `pairs_whitelist`. For example: "BTC/USDT"
 1) In terminal:
     - `docker-compose up -d`
