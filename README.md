@@ -8,7 +8,9 @@
 
 &nbsp;&nbsp;&nbsp;I was inspired by the [Lightweight-Charts-Python](https://github.com/louisnw01/lightweight-charts-python) library and [this PartTimeLarry video](https://www.youtube.com/watch?v=TlhDI3PforA) to create a solution that allows Freqtrade users to visualize their trading strategies using Lightweight-Charts. This requires a Javascript script to be run inside of the Freqtrade Docker container. 
 
-The result is an interactive chart that look like this:![RSI example plot](images/RSI_example.png)
+The result is an interactive chart that look like this:
+
+![RSI example plot](images/RSI_example.gif?raw=true)
 
 
 &nbsp;&nbsp;&nbsp;If this is your first time setting up Freqtrade, see the [Initialization section](#initialization) below and refer to the [Freqtrade Quickstart Guide](https://www.freqtrade.io/en/latest/quickstart/).
