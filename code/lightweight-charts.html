@@ -24,7 +24,6 @@
     <div id="indicator" class="pane" style="width:800px;height:150px"></div>
   </div>
   <script>
-    // CSV parse util (comma splitting only, not robust for quoted commas)
     function parseCSV(csvText) {
       const lines = csvText.trim().split('\n').filter(l => l.trim().length);
       const header = lines[0].split(',');
@@ -39,7 +38,6 @@
       };
     }
 
-    // Globals for indicator column logic
     let indicatorColumns = [], indicatorRows = [];
 
     document.getElementById('indicatorFile').onchange = async function(e) {
@@ -48,7 +46,7 @@
       const csvText = await file.text();
       const { columns, rows } = parseCSV(csvText);
 
-      // Populate column dropdown
+      // Dropdown
       const select = document.getElementById('indicatorCol');
       select.innerHTML = '';
       columns.forEach(col => {
@@ -63,7 +61,7 @@
     };
 
     document.getElementById('plotBtn').onclick = async function() {
-      // --- Parse OHLCV ---
+      // OHLCV
       const ohlcvInput = document.getElementById('ohlcvFile').files[0];
       if (!ohlcvInput) return alert("Select OHLCV CSV!");
       const ohlcvText = await ohlcvInput.text();
@@ -77,7 +75,7 @@
         close: Number(row.close)
       }));
 
-      // --- Parse Indicator CSV (optional) ---
+      // Indicator CSV
       const indicatorInput = document.getElementById('indicatorFile').files[0];
       let indicatorData = [];
       if (indicatorInput) {
@@ -85,15 +83,24 @@
         const pickedCol = indColSelect.value;
         if (!pickedCol) return alert("Choose which column to plot as indicator!");
         const indTimeCol = indicatorColumns.includes('time') ? 'time' : indicatorColumns[0];
-        indicatorData = indicatorRows
-          .filter(row => row[pickedCol] !== "" && !isNaN(Number(row[pickedCol])))
-          .map(row => ({
-            time: Number(row[indTimeCol]),
-            value: Number(row[pickedCol])
-          }));
+        const ohlcvTimes = new Set(candles.map(c => c.time));
+        
+        const indicatorMap = {};
+        indicatorRows.forEach(row => {
+          indicatorMap[Number(row.time)] = 
+            row[pickedCol] !== "" && !isNaN(Number(row[pickedCol])) ? Number(row[pickedCol]) : null;
+        });
+
+        // Always create a value for every candle (even if null)
+        indicatorData = candles.map(candle => ({
+          time: candle.time,
+          value: indicatorMap[candle.time] !== undefined ? indicatorMap[candle.time] : null
+        }));
+
       }
 
-      // --- Parse Trades JSON (optional) ---
+
+      // JSON for trades
       let markers = [];
       const tradesInput = document.getElementById('tradesFile').files[0];
       if (tradesInput) {
@@ -106,7 +113,7 @@
           if (stratKeys.length > 0) trades = tradesObj.strategy[stratKeys[0]].trades || [];
         }
         trades.forEach(trade => {
-          // BUY marker
+          // BUY
           markers.push({
             time: Math.floor(trade.open_timestamp / 1000),
             position: 'belowBar',
@@ -114,7 +121,7 @@
             shape: 'arrowUp',
             text: 'Buy\n' + Number(trade.open_rate).toFixed(2)
           });
-          // SELL marker
+          // SELL
           if (trade.close_timestamp && trade.close_rate) {
             markers.push({
               time: Math.floor(trade.close_timestamp / 1000),
@@ -127,11 +134,11 @@
         });
       }
 
-      // --- Remove Previous Charts ---
+      // Remove old charts
       document.getElementById('price').innerHTML = '';
       document.getElementById('indicator').innerHTML = '';
 
-      // --- Create Price Chart (Top Pane) ---
+      // Price chart
       const priceChart = LightweightCharts.createChart(document.getElementById('price'), {
         layout: { background: { color: "#181818" }, textColor: "#fff" },
         timeScale: { timeVisible: true, secondsVisible: true }
@@ -140,7 +147,7 @@
       candleSeries.setData(candles);
       if (markers.length) candleSeries.setMarkers(markers);
 
-      // --- Create Indicator Chart (Bottom Pane) ---
+      // Indicator chart
       const indicatorChart = LightweightCharts.createChart(document.getElementById('indicator'), {
         layout: { background: { color: "#181818" }, textColor: "#fff" },
         timeScale: { timeVisible: true, secondsVisible: true }
@@ -150,7 +157,7 @@
         indicatorSeries.setData(indicatorData);
       }
 
-      // --- SYNC PANE LOGIC (EXACT) ---
+      // Sync panes
       priceChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
         if (range) indicatorChart.timeScale().setVisibleLogicalRange(range);
       });
