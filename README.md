@@ -43,8 +43,8 @@ The result is an interactive chart that look like this:
 
 5) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in:
     - `bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>`
-    - `bots/<bot>/user_data/<exchange>/<Pair_Timeframe.csv>`
-    - `bots/<bot>/user_data/data/indicator_data`
+    - `bots/<bot>/user_data/data/<exchange>/<Pair_Timeframe.csv>`
+    - `bots/<bot>/user_data/data/<exchange>/indicator_data_<StrategyName>.csv`
 
 ---
 
