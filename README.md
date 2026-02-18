@@ -17,34 +17,16 @@ The result is an interactive chart that look like this:
 
 &nbsp;&nbsp;&nbsp;If Freqtrade is already set up, you can skip to the [Lightweight-Charts Plotting section](#lightweight-charts-plotting) section.
 
+### Quick Start
 
+1) Run [`code/main.py`](code/main.py) and follow prompts
 
-## Lightweight-Charts Plotting
-1) Generate a backtest (*see [Backtesting](#backtesting) section below*)
-
-2) Run [`code/feather_to_csv.py`(code/feather_to_csv.py) to convert the feather files Freqtrade generated to CSVs
-
-3) Run [`code/unzip_backtest_results.py`](code/unzip_backtest_results.py) to unzip backtest results
-
-4) In terminal:
-    - First time:
-        - `mkdir -p bots/<bot>/user_data/code`
-        - `cp code/extract_indicators.py bots/<bot>/user_data/code/`
-
-    - Each time:
-        - Start container:
-            - `cd bots/<bot>`
-            - `docker-compose up -d`
-            - `docker exec -it freqtrade bash`
-
-        - Extract indicators:
-            - `cd user_data/`
-            - `python3 code/extract_indicators.py --strategy <DesiredStrategyName>`
-
-5) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in:
-    - `bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>`
+2) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in:
     - `bots/<bot>/user_data/data/<exchange>/<Pair_Timeframe.csv>`
-    - `bots/<bot>/user_data/data/<exchange>/indicator_data_<StrategyName>.csv`
+    - `bots/<bot>/user_data/data/indicator_data_<StrategyName>.csv`
+    - `bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>`
+
+
 
 ---
 
@@ -69,22 +51,6 @@ The result is an interactive chart that look like this:
     - `docker-compose run --rm freqtrade create-userdir --userdir user_data`
     - `docker-compose run --rm freqtrade new-config --config user_data/config.json`
     - In `command:` section of "docker-compose.yml," need to switch to strategy you want to run via `--strategy <StrategyName>`
-
-
-## Backteststing
-0) In `bots/<bot>/user_data/config.json`
-- Be sure set to `"method": "StaticPairList", ` and pairs selected in the `pairs_whitelist`. For example: "BTC/USDT"
-1) In terminal:
-    - First time:
-        - `docker-compose up -d`
-        - `docker exec -it freqtrade bash`
-            - If this doesn't work, can double check name with `docker ps`
-        - `freqtrade download-data`
-            - To force refresh, may need to delete current files to overwrite them
-    
-    - For each new strategy:
-        - `freqtrade backtesting --export=trades --strategy <StrategyName> --timeframe <Xy> --timerange <YEARMoDa-YEARMoDa>`
-            - Note that timeframe and timerange are optional, both will revert to defaults
 
 ---
 
