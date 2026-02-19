@@ -21,10 +21,7 @@ The result is an interactive chart that look like this:
 
 1) Run [`code/main.py`](code/main.py) and follow prompts
 
-2) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in:
-    - `bots/<bot>/user_data/data/<exchange>/<Pair_Timeframe.csv>`
-    - `bots/<bot>/user_data/data/indicator_data_<StrategyName>.csv`
-    - `bots/<bot>/user_data/<exchange>/backtest_results/<desired_backtest_results>/<desired_backtest_results.json>`
+2) Open [`code/lightweight-charts.html`](code/lightweight-charts.html) in browser. Personally, I use LiveServer VSCode extension. Use the file pickers to select the newly generated files in the [`output/`](output) folder.
 
 
 
