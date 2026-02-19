@@ -138,7 +138,7 @@ def run_backtest(bot_name, strategy, config):
     container_name = ensure_container_running(bot_name)
     
     timeframe = config.get('timeframe', '1h')
-    timerange = input(f"[INPUT] Timerange (YYYYMMDD-YYYYMMDD) [press enter for default]:").strip()
+    timerange = input(f"[INPUT] Timerange (YYYYMMDD-YYYYMMDD) [default: last 90 days]: ").strip()
     
     cmd = [
         'docker', 'exec', container_name,
@@ -222,12 +222,15 @@ def prepare_visualization_files(bot_name, strategy):
     print_summary(bot_name, strategy)
 
 
-def print_summary(bot_name, strategy):
-    """Print summary of where to find output files"""
-    print_header("Files Ready for Visualization")
+def copy_to_output(bot_name, strategy):
+    """Copy generated files to output/ folder with readable prefixes"""
+    print_header("Copying Files to Output Folder")
     
     project_root = Path(__file__).parent.parent
     bot_dir = project_root / 'bots' / bot_name
+    output_dir = project_root / 'output'
+    output_dir.mkdir(exist_ok=True)
+    
     config = load_config(bot_name)
     exchange = config.get('exchange', {}).get('name', 'unknown')
     pair_whitelist = config.get('exchange', {}).get('pair_whitelist', [])
@@ -237,26 +240,71 @@ def print_summary(bot_name, strategy):
     pair_base = pair.replace('/', '').replace('_', '')
     pair_uscore = pair.replace('/', '_')
     
-    print("\nOpen code/lightweight-charts.html in your browser and load:")
-    print(f"\n📊 OHLCV CSV:")
-    print(f"   bots/{bot_name}/user_data/data/{exchange}/{pair_base}-{timeframe}_tv.csv")
-    print(f"   (or {pair_uscore}-{timeframe}_tv.csv)")
+    copied_files = []
     
-    print(f"\n📈 Indicator CSV:")
-    print(f"   bots/{bot_name}/user_data/data/indicator_data/indicator_data_{strategy}.csv")
+    # 1. Copy OHLCV CSV
+    ohlcv_candidates = [
+        bot_dir / 'user_data' / 'data' / exchange / f"{pair_base}-{timeframe}_tv.csv",
+        bot_dir / 'user_data' / 'data' / exchange / f"{pair_uscore}-{timeframe}_tv.csv"
+    ]
+    for ohlcv_file in ohlcv_candidates:
+        if ohlcv_file.exists():
+            dest = output_dir / f"OHLCV_{pair_base}-{timeframe}.csv"
+            import shutil
+            shutil.copy2(ohlcv_file, dest)
+            copied_files.append(('OHLCV', dest))
+            print(f"[SUCCESS] Copied OHLCV → {dest.name}")
+            break
+    else:
+        print(f"[WARN] OHLCV CSV not found")
     
-    print(f"\n💹 Trades JSON:")
+    # 2. Copy Indicator CSV
+    indicator_file = bot_dir / 'user_data' / 'data' / 'indicator_data' / f"indicator_data_{strategy}.csv"
+    if indicator_file.exists():
+        dest = output_dir / f"Indicator_{strategy}.csv"
+        import shutil
+        shutil.copy2(indicator_file, dest)
+        copied_files.append(('Indicator', dest))
+        print(f"[SUCCESS] Copied Indicator → {dest.name}")
+    else:
+        print(f"[WARN] Indicator CSV not found: {indicator_file}")
+    
+    # 3. Copy Trades JSON (most recent backtest result)
     backtest_dir = bot_dir / 'user_data' / 'backtest_results'
     if backtest_dir.exists():
-        # Find most recent backtest result
         results = sorted(backtest_dir.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
         if results:
-            print(f"   {results[0].relative_to(project_root)}")
+            latest = results[0]
+            dest = output_dir / f"Trades_{strategy}_{latest.stem}.json"
+            import shutil
+            shutil.copy2(latest, dest)
+            copied_files.append(('Trades', dest))
+            print(f"[SUCCESS] Copied Trades → {dest.name}")
         else:
-            print(f"   bots/{bot_name}/user_data/backtest_results/<latest>.json")
+            print(f"[WARN] No backtest results found")
     else:
-        print(f"   bots/{bot_name}/user_data/backtest_results/<latest>.json")
+        print(f"[WARN] Backtest results directory not found")
     
+    return copied_files
+
+
+def print_summary(bot_name, strategy):
+    """Print summary of where to find output files"""
+    print_header("Files Ready for Visualization")
+    
+    project_root = Path(__file__).parent.parent
+    
+    # Copy files to output folder
+    copied_files = copy_to_output(bot_name, strategy)
+    
+    print("\n" + "="*60)
+    print("  Quick Access - Files copied to output/ folder:")
+    print("="*60)
+    for file_type, filepath in copied_files:
+        print(f"  {file_type:12} → output/{filepath.name}")
+    
+    print(f"\n\nOpen code/lightweight-charts-multi.html in your browser")
+    print(f"Load the 3 files from the output/ folder using the file pickers")
     print("\n")
 
 
